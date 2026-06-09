@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garmin PDO Epson選型工具</title>
+<style>
+  :root{
+    --bg:#f5f5f3;--surface:#fff;--surface2:#f7f7f5;--line:#deded9;
+    --text:#111;--muted:#626262;--accent:#111;--accent2:#333;
+    --ok:#1f7a3f;--warn:#a86500;--bad:#b42318;--shadow:0 10px 26px rgba(0,0,0,.08);
+    --focus:#1d4ed8;--focusSoft:rgba(29,78,216,.16);
+  }
+  *{box-sizing:border-box}
+  ::selection{background:var(--focusSoft);color:var(--text)}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",Roboto,Arial,sans-serif;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1220px;margin:0 auto;padding:0 18px 72px}
+  header{margin:0 -18px 22px;background:#0d0d0d;color:#fff;border-bottom:1px solid #000}
+  .headInner{max-width:1220px;margin:0 auto;padding:18px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+  h1{margin:0;font-size:28px;letter-spacing:.01em;font-weight:800}
+  .brand{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#bdbdbd;margin-bottom:6px}
+  .subtitle{margin:5px 0 0;color:#cfcfcf;font-size:13px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab,.btn,.ghost{appearance:none;border:1px solid var(--line);border-radius:2px;background:var(--surface);color:var(--text);padding:9px 13px;font-size:14px;cursor:pointer}
+  .tab{background:#0d0d0d;color:#f3f3f3;border-color:#4a4a4a}
+  .tab.active,.btn{background:#fff;border-color:#fff;color:#111;font-weight:700}
+  .tab:hover,.ghost:hover{border-color:#111}
+  button,.tab,.btn,.ghost,.miniBtn,.actions button,.actions a{-webkit-tap-highlight-color:transparent}
+  button,.tab,.btn,.ghost,.miniBtn,.actions button{user-select:none;-webkit-user-select:none}
+  button:focus{outline:none}
+  .tab:focus-visible,.btn:focus-visible,.ghost:focus-visible,.miniBtn:focus-visible,.actions button:focus-visible,.actions a:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+    box-shadow:0 0 0 4px var(--focusSoft);
+  }
+  .panel{display:none}.panel.active{display:block}
+  .layout{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+  #lookup .layout{grid-template-columns:minmax(280px,860px);justify-content:center}
+  #lookup .box{position:static}
+  #lookup #lookupOut{width:100%;max-width:860px;margin:0 auto}
+  @media(max-width:880px){.headInner{display:block}.tabs{margin-top:14px}.layout{grid-template-columns:1fr}}
+  .box,.card{background:var(--surface);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow)}
+  .box{padding:16px;position:sticky;top:14px}
+  @media(max-width:880px){.box{position:static}}
+  .sectionTitle{font-size:13px;color:var(--muted);font-weight:700;margin:2px 0 12px;text-transform:uppercase;letter-spacing:.04em}
+  .field{margin-bottom:13px}
+  label{display:block;color:#344054;font-size:13px;font-weight:650;margin-bottom:5px}
+  input,select{width:100%;height:40px;border:1px solid var(--line);border-radius:2px;background:#fff;color:var(--text);padding:8px 10px;font-size:14px}
+  input:focus,select:focus{outline:2px solid rgba(0,0,0,.12);border-color:#111}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .btn{width:100%;height:42px}.btn:hover{background:var(--accent2)}
+  .resultHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 10px;color:var(--muted);font-size:13px}
+  .card{padding:15px 16px;margin-bottom:12px}
+  .cardTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .model{font-size:19px;font-weight:780;margin:0}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .badge{font-size:12px;color:#344054;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+  .score{text-align:right;min-width:150px;color:var(--muted);font-size:12px}
+  .score b{display:block;color:var(--accent);font-size:22px;line-height:1}
+  .metrics{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:8px;margin-top:13px}
+  @media(max-width:980px){.metrics{grid-template-columns:repeat(2,1fr)}.cardTop{display:block}.score{text-align:left;margin-top:10px}}
+  .metric{background:var(--surface2);border:1px solid var(--line);border-radius:2px;padding:8px}
+  .metric span{display:block;color:var(--muted);font-size:11px}.metric b{font-size:14px}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+  .actions a,.actions button{border:1px solid #111;background:#fff;border-radius:2px;padding:7px 10px;font-size:13px;color:#111;cursor:pointer}
+  .actions button.primary{background:#111;border-color:#111;color:#fff}
+  .detail{display:none;margin-top:13px;border-top:1px solid var(--line);padding-top:12px}.detail.open{display:block}
+  table{width:100%;border-collapse:collapse;font-size:13px}td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}td:first-child{width:38%;color:var(--muted)}
+  .empty{background:var(--surface);border:1px dashed var(--line);border-radius:2px;padding:28px;text-align:center;color:var(--muted)}
+  .status{display:flex;gap:10px;align-items:flex-start;border-radius:2px;padding:11px 12px;margin:9px 0;background:var(--surface2);border:1px solid var(--line)}
+  .status:before{content:"";width:10px;height:10px;border-radius:50%;margin-top:5px;flex:none;background:var(--muted)}
+  .status.ok:before{background:var(--ok)}.status.warn:before{background:var(--warn)}.status.bad:before{background:var(--bad)}
+  .status h4{margin:0 0 2px;font-size:14px}.status p{margin:0;color:var(--muted);font-size:13px}
+  .ac{position:relative}.acList{position:absolute;z-index:10;left:0;right:0;top:100%;max-height:310px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:0 0 8px 8px;box-shadow:var(--shadow)}
+  .acItem{padding:9px 10px;border-bottom:1px solid var(--line);cursor:pointer}.acItem:hover,.acItem.sel{background:#eef6fb}.acItem small{display:block;color:var(--muted)}
+  .notice{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media(max-width:880px){.grid3{grid-template-columns:1fr}}
+  .report{background:#fff;border:1px solid var(--line);border-radius:2px;padding:18px;margin-top:12px}
+  .report h2{margin:0 0 10px;font-size:20px}.report h3{margin:16px 0 6px;font-size:15px}
+  .reportMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+  .reportMeta div{border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--surface2)}
+  .reportMeta span{display:block;font-size:11px;color:var(--muted)}.reportMeta b{font-size:14px}
+  .printOnly{display:none}
+  .purchasedHero{display:block}
+  .price{font-variant-numeric:tabular-nums;font-weight:800}
+  .priceTable th{font-size:12px;text-transform:uppercase;color:#666;text-align:left;border-bottom:1px solid var(--line);padding:8px}
+  .priceTable td{font-size:14px}
+  .miniBtn{border:1px solid #111;background:#fff;color:#111;border-radius:2px;padding:5px 8px;cursor:pointer}
+  @media print{
+    body{background:#fff;color:#111}
+    header,.box,.tabs,.actions,.notice,.noPrint{display:none!important}
+    .wrap{max-width:none;padding:0}
+    .layout{display:block}
+    .card,.report{box-shadow:none;border-color:#aaa;break-inside:avoid}
+    .printOnly{display:block}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="headInner">
+      <div>
+        <div class="brand">Garmin PDO</div>
+        <h1>Epson 選型工具</h1>
+        <p class="subtitle">Epson 型號資料。資料下載一律導向官方網頁，以避免型號與檔案不一致。</p>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-tab="lookup">型號查詢</button>
+        <button class="tab" data-tab="recommend">條件推薦</button>
+        <button class="tab" data-tab="advice">工程確認</button>
+        <button class="tab" data-tab="purchased">已購資訊</button>
+      </div>
+    </div>
+  </header>
+
+  <section id="lookup" class="panel active">
+    <div class="layout">
+      <div class="box">
+        <div class="field ac">
+          <label for="q">型號</label>
+          <input id="q" autocomplete="off" placeholder="例如 GX8-C452S、C8-A901S、LS8" />
+          <div id="acList" class="acList" hidden></div>
+        </div>
+        <div class="hint">支援大小寫、全半形與省略連字號的模糊查詢。</div>
+      </div>
+      <div id="lookupOut" class="empty">輸入型號後顯示規格、慣量與官方下載頁。</div>
+    </div>
+  </section>
+
+  <section id="recommend" class="panel">
+    <div class="layout">
+      <div class="box">
+        <div class="grid2">
+          <div class="field"><label for="kind">軸數類型</label><select id="kind"><option value="any">不限</option><option value="scara">SCARA</option><option value="6axis">6 軸</option></select></div>
+          <div class="field"><label for="env">環境</label><select id="env"><option value="any">不限</option><option value="標準">標準</option><option value="ESD">ESD 或潔淨 ESD</option><option value="潔淨">潔淨</option><option value="防護">防護</option></select></div>
+        </div>
+        <div class="field"><label for="preferredSeries">選擇系列</label><select id="preferredSeries"><option value="">不指定</option></select></div>
+        <div class="grid2">
+          <div class="field"><label for="load">工件＋治具總重 kg</label><input id="load" type="number" step="0.1" min="0" placeholder="2.5"></div>
+          <div class="field"><label for="reach">作業半徑 mm</label><input id="reach" type="number" step="10" min="0" placeholder="450"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="zreq">Z 行程 mm</label><input id="zreq" type="number" step="10" min="0" placeholder="SCARA 使用"></div>
+          <div class="field"><label for="mount">安裝方式</label><select id="mount"><option value="any">不限</option><option value="桌上型">桌上型</option><option value="壁掛型">壁掛型</option><option value="天吊型">天吊型</option></select></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="budgetMax">預算上限</label><input id="budgetMax" type="number" step="1000" min="0" placeholder="可留空"></div>
+          <div class="field"><label for="preferPurchased">已購機型</label><select id="preferPurchased"><option value="any">不限制</option><option value="yes">優先已購</option><option value="only">只看已購</option></select></div>
+        </div>
+        <div class="field"><label for="officialListMode">官方列表型號</label><select id="officialListMode"><option value="any">不限制</option><option value="yes">優先官方列表型號</option><option value="only">只看官方列表型號</option></select></div>
+        <button class="btn" id="runRecommend">產生推薦</button>
+        <div class="notice">條件推薦只做基礎篩選與排序。J4 慣量、CAD 慣量、重心、速度降額請到「工程確認」計算。</div>
+      </div>
+      <div id="recommendOut" class="empty">輸入負載與作業半徑後產生 Top 5。</div>
+    </div>
+  </section>
+
+  <section id="advice" class="panel">
+    <div class="layout">
+      <div class="box">
+        <div class="field"><label for="selectedModel">型號</label><select id="selectedModel"></select></div>
+        <div class="grid2">
+          <div class="field"><label for="aMass">總重 kg</label><input id="aMass" type="number" step="0.1" min="0"></div>
+          <div class="field"><label for="aRadius">J4 等效半徑 mm</label><input id="aRadius" type="number" step="5" min="0"></div>
+        </div>
+        <div class="notice" style="border-top:0;padding-top:0;margin-top:-4px;margin-bottom:12px">
+          不知道慣量時，先填總重與 J4 等效半徑。等效半徑是工件重心到旋轉軸的距離；若有 CAD 慣量，形狀選「使用 CAD 慣量」並填 kg·m²。常見換算：80 mm 請填 80，程式會自動換算成 m 計算。
+        </div>
+        <div class="grid3">
+          <div class="field"><label for="cgX">重心 X mm</label><input id="cgX" type="number" step="1" placeholder="左右偏心"></div>
+          <div class="field"><label for="cgY">重心 Y mm</label><input id="cgY" type="number" step="1" placeholder="前後偏心"></div>
+          <div class="field"><label for="cgZ">重心 Z mm</label><input id="cgZ" type="number" step="1" placeholder="法蘭外伸"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="shape">慣量估算形狀</label><select id="shape"><option value="point">集中質量</option><option value="box">長方體</option><option value="cylinder">圓柱</option><option value="known">使用 CAD 慣量</option></select></div>
+          <div class="field"><label for="aInertia">CAD 慣量 kg·m²</label><input id="aInertia" type="number" step="0.001" min="0" placeholder="若有 CAD 計算值請填"></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><label for="dimA">尺寸 A mm</label><input id="dimA" type="number" step="1" placeholder="長 / 直徑"></div>
+          <div class="field"><label for="dimB">尺寸 B mm</label><input id="dimB" type="number" step="1" placeholder="寬 / 可留空"></div>
+          <div class="field"><label for="targetCycle">節拍目標 s</label><input id="targetCycle" type="number" step="0.01" min="0" placeholder="例如 0.45"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="safetyFactor">安全係數</label><input id="safetyFactor" type="number" step="0.05" min="1" value="1.15"></div>
+          <div class="field"><label for="duty">預估稼動率 %</label><input id="duty" type="number" step="5" min="0" max="100" value="50"></div>
+        </div>
+        <button class="btn" id="runAdvice">重新計算</button>
+        <button class="ghost" id="exportPdf" type="button" style="width:100%;margin-top:8px">匯出工程報告 PDF</button>
+      </div>
+      <div id="adviceOut"></div>
+    </div>
+  </section>
+
+  <section id="purchased" class="panel">
+    <div class="purchasedHero">
+      <div>
+        <div class="card">
+          <h2 class="model">Garmin 已購機型報價表</h2>
+          <p class="subtitle" style="color:var(--muted)">依 Garmin 已購資料整理，價格為前購未稅價。可用於條件推薦的優先排序與預算初篩。</p>
+          <div id="purchasedOut"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const PM="https://eposs.epson.com.cn/EPSON/assets/Master/robots/download/pm/";
+const MANUAL={GX:PM+"gx_robot.pdf",C:PM+"c_robot.pdf",CC:PM+"c-c_robot.pdf",CX:PM+"cx-a.pdf",LSB:PM+"ls-b_robot.pdf",LSC:PM+"ls-c_robot.pdf",LA:PM+"la-a_robot.pdf",N:PM+"n_robot.pdf",RS:PM+"rs_robot.pdf",T:PM+"t-b_robot.pdf",VT:"https://w3.epson.com.tw/uploadfiles/brochure/EpsonRobot%E6%A9%9F%E6%A2%B0%E6%89%8B%E8%87%82%E5%85%A8%E5%9E%8B%E9%8C%84.pdf"};
+const PRODUCT_ROOT="https://www.epson.com.cn/products/robots/";
+const models=[];
+const purchasedModels=[
+  {raw:"C4-A601S/RC700+API",model:"C4-A601S",price:487800},
+  {raw:"C8-A901S/RC700-A+API",model:"C8-A901S",price:387800},
+  {raw:"N2-A450SR/RC700-A+API",model:"N2-A450SR",price:480000},
+  {raw:"N6-A1000S/RC700-A+API",model:"N6-A1000S",price:570000},
+  {raw:"G1-221S/RC700A+API",model:"GX1-C221S",price:327712,note:"照片為 G1-221S，工具以 GX1-C221S 對應"},
+  {raw:"GX20-CA04SR/RC800-A+API",model:"GX20-CA01S",price:663800,note:"照片為 GX20-CA04SR，工具以 GX20-CA01S 長臂系列對應"},
+  {raw:"LS10-B602S/RC90-B+API",model:"LS10-B603S",price:288000,note:"照片為 B602S，工具以 B603S 長行程系列對應"},
+  {raw:"LS10-B702S/RC90-B+API",model:"LS10-B703S",price:419800,note:"照片為 B702S，工具以 B703S 長行程系列對應"},
+  {raw:"LS3-B401S/RC90-B+API",model:"LS3-B401S",price:274800},
+  {raw:"RS3-351S/RC700-A+API",model:"RS3-351S",price:298000},
+  {raw:"RS4-551S/RC700-A+API",model:"RS4-551S",price:344000},
+  {raw:"T3-401S+API",model:"T3-B401S",price:200000},
+  {raw:"T6-602S+API",model:"T6-B602S",price:199000}
+];
+const purchasedByModel=new Map(purchasedModels.map(x=>[x.model,x]));
+const productCatalog=[
+  {model:"LS4-C401S",series:"LS",kind:"scara",name:"愛普生 LS4-C SCARA 機器人",isNew:true},
+  {model:"LS8-C502S",series:"LS",kind:"scara",name:"愛普生 LS8-C SCARA 機器人",isNew:true},
+  {model:"LS8-C602S",series:"LS",kind:"scara",name:"愛普生 LS8-C SCARA 機器人",isNew:true},
+  {model:"LS8-C702S",series:"LS",kind:"scara",name:"愛普生 LS8-C SCARA 機器人",isNew:true},
+  {model:"CX4-A601S",series:"CX",kind:"6axis",name:"愛普生 CX4 緊湊型 6 軸機器人",isNew:true},
+  {model:"CX7-A701S",series:"CX",kind:"6axis",name:"愛普生 CX7 緊湊型 6 軸機器人",isNew:true},
+  {model:"CX7-A901S",series:"CX",kind:"6axis",name:"愛普生 CX7 緊湊型 6 軸機器人",isNew:true},
+  {model:"LS20-C804S",series:"LS",kind:"scara",name:"愛普生 LS20 SCARA 機器人",isNew:false}
+];
+const officialListModels=new Set(productCatalog.map(x=>x.model));
+
+function add(o){models.push(Object.assign({env:"標準",mount:["桌上型"],j4Rated:null,j4Max:null,ct:null,verified:false,note:""},o));}
+function page(model){return PRODUCT_ROOT+model.toLowerCase()+"/";}
+function scara(model,series,reach,z,rl,ml,ctrl,j4Rated,j4Max,opts={}){add(Object.assign({model,series,kind:"scara",type:"SCARA",reach,z,ratedLoad:rl,maxLoad:ml,controller:ctrl,j4Rated,j4Max,official:page(model),manual:opts.manual||MANUAL.GX,mount:["桌上型"],env:"標準",verified:true},opts));}
+function six(model,series,reach,rl,ml,ctrl,inertia={},opts={}){add(Object.assign({model,series,kind:"6axis",type:"6 軸",reach,z:null,ratedLoad:rl,maxLoad:ml,controller:ctrl,j4Rated:inertia.j4Rated||null,j4Max:inertia.j4Max||null,j5Max:inertia.j5Max||null,j6Max:inertia.j6Max||null,official:page(model),manual:opts.manual||MANUAL.C,mount:["桌上型","天吊型"],env:"標準",verified:true},opts));}
+function variants(base, envs){const b=models.find(x=>x.model===base); if(!b)return; envs.forEach(e=>add(Object.assign({},b,{model:base.slice(0,-1)+e.suffix,baseModel:base,env:e.env,official:page(base),z:e.z??b.z,verified:false,note:"衍生環境規格；Epson 通常以基準 S 型號頁提供同系列下載，實際訂購碼請以手冊與業務確認。"})));}
+
+scara("GX1-C171S","GX",175,100,0.5,1,"RC800-A",0.0003,0.004,{ct:.292,manual:MANUAL.GX,note:"小型高精度 SCARA"});
+scara("GX1-C221S","GX",225,100,0.5,1,"RC800-A",0.0003,0.004,{ct:.292});
+variants("GX1-C171S",[{suffix:"C",env:"潔淨",z:80}]); variants("GX1-C221S",[{suffix:"C",env:"潔淨",z:80}]);
+["251","301","351"].forEach((r,i)=>scara(`GX4-C${r}S`,"GX",+r,150,2,4,"RC800-A",0.005,0.05,{ct:[.33,.34,.35][i]}));
+["251","301","351"].forEach(r=>variants(`GX4-C${r}S`,[{suffix:"E",env:"ESD"},{suffix:"C",env:"潔淨",z:120}]));
+["452","552","652"].forEach((code,i)=>{const reach=[450,550,650][i], wt=[33,34,35][i];scara(`GX8-C${code}S`,"GX",reach,200,4,8,"RC800-A",0.01,0.16,{ct:[.28,.30,.33][i],mount:["桌上型","壁掛型","天吊型"],note:`本體重量約 ${wt} kg，官方頁含 3D STEP。`}); variants(`GX8-C${code}S`,[{suffix:"E",env:"ESD"},{suffix:"C",env:"潔淨",z:170},{suffix:"P",env:"防護",z:170}]); scara(`GX8-C${code[0]}53S`,"GX",reach,330,4,8,"RC800-A",0.01,0.16,{ct:[.28,.30,.33][i],mount:["桌上型","壁掛型","天吊型"],note:"長 Z 行程；S/ESD 為 330 mm，潔淨/防護為 300 mm。"}); variants(`GX8-C${code[0]}53S`,[{suffix:"E",env:"ESD"},{suffix:"C",env:"潔淨",z:300},{suffix:"P",env:"防護",z:300}]);});
+["654","854"].forEach((code,i)=>{scara(`GX10-B${code}S`,"GX",[650,850][i],420,5,10,"RC700-E",0.02,0.25,{ct:[.338,.377][i],mount:["桌上型","壁掛型","天吊型"]}); variants(`GX10-B${code}S`,[{suffix:"C",env:"潔淨",z:390},{suffix:"P",env:"防護",z:390}]); scara(`GX10-B${code[0]}51S`,"GX",[650,850][i],180,5,10,"RC700-E",0.02,0.25,{ct:[.338,.377][i],mount:["桌上型","壁掛型","天吊型"],note:"標準 Z 行程"});});
+scara("GX20-B854S","GX",850,420,10,20,"RC700-E",0.05,0.45,{ct:.365,mount:["桌上型","壁掛型","天吊型"]});
+scara("GX20-CA01S","GX",1000,420,10,20,"RC800-A",0.05,0.45,{ct:.422,mount:["桌上型","壁掛型","天吊型"],note:"Epson 官方頁標示 GX20-CA01S，1000 mm，最大 20 kg。"});
+["GX20-B854S","GX20-CA01S"].forEach(m=>variants(m,[{suffix:"C",env:"潔淨",z:390},{suffix:"P",env:"防護",z:390}]));
+
+scara("LS3-B401S","LS",400,120,1,3,"RC90-B",null,null,{manual:MANUAL.LSB,ct:.38,note:"官方資料未在頁面摘要中提供 J4 慣量，需手冊確認。"});
+scara("LS4-C401S","LS",400,150,2,4,"RC800-A",null,null,{manual:MANUAL.LSC});
+variants("LS4-C401S",[{suffix:"C",env:"潔淨",z:120}]);
+["502","602","702"].forEach((code,i)=>scara(`LS6-B${code}S`,"LS",[500,600,700][i],200,2,6,"RC700E / RC90-B",null,null,{manual:MANUAL.LSB}));
+["502","602","702"].forEach((code,i)=>{scara(`LS8-C${code}S`,"LS",[500,600,700][i],200,3,8,"RC800-A",null,null,{manual:MANUAL.LSC}); variants(`LS8-C${code}S`,[{suffix:"C",env:"潔淨",z:170}]);});
+["603","703","803"].forEach((code,i)=>scara(`LS10-B${code}S`,"LS",[600,700,800][i],300,5,10,"RC700E / RC90-B",0.02,0.3,{manual:MANUAL.LSB,note:"LS10-B 長 Z 型；官方 LS10-B 系列 Z 軸提供 200 / 300 mm。"}));
+["804","A04"].forEach((code,i)=>{const model=i?"LS20-CA04S":"LS20-C804S"; scara(model,"LS",i?1000:800,420,10,20,"RC800-A",null,null,{manual:MANUAL.LSC}); variants(model,[{suffix:"C",env:"潔淨",z:390}]);});
+scara("LS50-CA02S","LS",1000,210,30,50,"RC800-A",null,null,{manual:MANUAL.LSC});
+scara("LS50-CA04S","LS",1000,400,30,50,"RC800-A",null,null,{manual:MANUAL.LSC});
+["LA3-A401S","LA6-A502S","LA6-A602S","LA6-A702S"].forEach((m,i)=>{scara(m,"LA",[400,500,600,700][i],[150,200,200,200][i],[1,2,2,2][i],[3,6,6,6][i],"RC800L",null,null,{manual:MANUAL.LA}); variants(m,[{suffix:"C",env:"潔淨",z:i===3?170:[150,200,200,200][i]}]);});
+scara("RS3-351S","RS",350,130,1,3,"RC700",null,null,{manual:MANUAL.RS,mount:["天吊型"],ct:.34});
+scara("RS4-551S","RS",550,150,1,4,"RC700",null,null,{manual:MANUAL.RS,mount:["天吊型"]});
+scara("T3-B401S","T",400,150,1,3,"內建控制器",null,null,{manual:MANUAL.T,ct:.49});
+scara("T6-B602S","T",600,200,2,6,"內建控制器",null,null,{manual:MANUAL.T,ct:.49});
+
+six("C4-A601S","C",600,1,4,"RC700",{}, {manual:MANUAL.C});
+six("C4-A901S","C",900,1,4,"RC700",{}, {manual:MANUAL.C});
+["C4-A601S","C4-A901S"].forEach(m=>variants(m,[{suffix:"C",env:"潔淨"}]));
+six("C8-A701S","C",711,3,8,"RC700E / RC800",{j4Max:.47,j5Max:.47,j6Max:.15},{manual:MANUAL.C,ct:.35,mount:["桌上型","壁掛型","天吊型"]});
+six("C8-A901S","C",901,3,8,"RC700E / RC800",{j4Max:.47,j5Max:.47,j6Max:.15},{manual:MANUAL.C,ct:.43,mount:["桌上型","壁掛型","天吊型"],note:"Epson 頁面列出 J4/J5 0.47、J6 0.15 kg·m²。"});
+six("C8-A1401S","C",1391,3,8,"RC700E / RC800",{j4Max:.47,j5Max:.47,j6Max:.15},{manual:MANUAL.C,ct:.50,mount:["桌上型","壁掛型","天吊型"]});
+["C8-A701S","C8-A901S","C8-A1401S"].forEach(m=>variants(m,[{suffix:"C",env:"潔淨"},{suffix:"P",env:"防護"}]));
+six("C8-C901S","C",901,3,8,"RC800-A",{}, {manual:MANUAL.CC,mount:["桌上型","壁掛型","天吊型"],note:"C-C 世代，慣量請以官方頁/手冊確認。"});
+variants("C8-C901S",[{suffix:"C",env:"潔淨"},{suffix:"P",env:"防護"}]);
+six("C12-A1401S","C",1400,3,12,"RC700E / RC800",{}, {manual:MANUAL.C,mount:["桌上型","天吊型"]});
+variants("C12-A1401S",[{suffix:"C",env:"潔淨"}]);
+["CX4-A601S","CX7-A701S","CX7-A901S"].forEach((m,i)=>{six(m,"CX",[601.6,701.3,901][i],[1,3,3][i],[4,7,7][i],"RC800-A",{}, {manual:MANUAL.CX,mount:["桌上型","壁掛型","天吊型"]}); variants(m,[{suffix:"C",env:"潔淨"},{suffix:"P",env:"防護"}]);});
+six("N2-A450SR","N",450,1,2.5,"RC700-A",{}, {manual:MANUAL.N});
+six("N6-A850S","N",850,3,6,"RC700-A",{}, {manual:MANUAL.N});
+six("N6-A1000S","N",1000,3,6,"RC700-A",{}, {manual:MANUAL.N});
+["N6-A850S","N6-A1000S"].forEach(m=>variants(m,[{suffix:"C",env:"潔淨"}]));
+six("VT6-A901S","VT",920,3,6,"內建控制器",{}, {manual:MANUAL.VT,mount:["桌上型"],note:"經濟型 All-in-One 6 軸。"});
+variants("VT6-A901S",[{suffix:"C",env:"潔淨"},{suffix:"P",env:"防護"}]);
+
+function enrich(pattern, data){
+  models.filter(m=>pattern.test(m.model)).forEach(m=>Object.assign(m,data));
+}
+function enrichOne(model, data){
+  const m=models.find(x=>x.model===model); if(m) Object.assign(m,data);
+}
+function curve(points){return points.map(p=>({x:p[0], y:p[1]}));}
+
+enrich(/^GX1-/,{source:"gx_robot.pdf p.38,55-57",eccRated:0,eccMax:100,j3Force:50,j3Speed:1200,j4Speed:3000,repeat:"J1-J2 ±0.005~0.008 mm / J3 ±0.01 mm / J4 ±0.01 deg",speedXY:3000,inertiaCurve:curve([[0,100],[0.0003,100],[0.001,70],[0.004,20]]),eccCurve:curve([[0,100],[50,70],[100,25]])});
+enrich(/^GX4-/,{source:"gx_robot.pdf p.112,143-147",eccRated:0,eccMax:150,j3Force:150,j3Speed:1100,j4Speed:3000,repeat:"J1-J2 ±0.008~0.01 mm / J3 ±0.01 mm / J4 ±0.005 deg",speedXY:3950,inertiaCurve:curve([[0,100],[0.005,100],[0.01,60],[0.02,40],[0.05,20]]),eccCurve:curve([[0,100],[50,70],[100,35],[150,24]])});
+enrich(/^GX8-/,{source:"gx_robot.pdf p.189,266-275",eccRated:0,eccMax:200,j3Force:150,j3Speed:2350,j4Speed:2800,repeat:"J1-J2 ±0.015 mm / J3 ±0.01 mm / J4 ±0.005 deg",speedXY:7450,inertiaCurve:curve([[0,100],[0.01,100],[0.05,55],[0.10,28],[0.16,12]]),eccCurve:curve([[0,100],[50,70],[100,50],[200,25]])});
+enrich(/^GX10-/,{source:"gx_robot.pdf p.376-382",eccRated:0,eccMax:200,j3Force:250,j3Speed:2350,j4Speed:2400,repeat:"J1-J2 ±0.025 mm / J3 ±0.01 mm / J4 ±0.005 deg",speedXY:8800,inertiaCurve:curve([[0.02,100],[0.05,75],[0.10,45],[0.25,15]]),eccCurve:curve([[0,100],[50,70],[100,50],[200,25]])});
+enrich(/^GX20-/,{source:"gx_robot.pdf p.376-382",eccRated:0,eccMax:200,j3Force:250,j3Speed:2350,j4Speed:1700,repeat:"J1-J2 ±0.025 mm / J3 ±0.01 mm / J4 ±0.005 deg",speedXY:11000,inertiaCurve:curve([[0.05,100],[0.10,70],[0.20,35],[0.45,12]]),eccCurve:curve([[0,100],[50,70],[100,50],[200,25]])});
+
+enrich(/^LS4-C/,{source:"Epson 官方型號頁 LS4-C401S 產品規格 / ls-c_robot.pdf",j4Rated:0.005,j4Max:0.05,eccRated:0,eccMax:100,j3Force:100,j3Speed:1100,j4Speed:2600,speedXY:7200,weight:"14 kg",power:"1.2 kVA",voltage:"AC200-240 V 單相",repeat:"J1-J2 ±0.01 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0,100],[0.005,100],[0.01,60],[0.02,40],[0.05,20]]),eccCurve:curve([[0,100],[50,55],[75,33],[100,25]])});
+enrichOne("LS4-C401S",{ct:.336,isNew:true,note:"官方新品；LS3-B 新一代機型，最大負載升級至 4 kg，手臂內置以太網口。"});
+enrich(/^LS8-C/,{source:"Epson 官方型號頁 LS8-C 產品規格 / ls-c_robot.pdf",j4Rated:0.01,j4Max:0.12,eccRated:0,eccMax:150,j3Force:100,j3Speed:1100,j4Speed:2000,power:"1.5 kVA",voltage:"AC200-240 V 單相",repeat:"J1-J2 ±0.02 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0,100],[0.01,100],[0.02,60],[0.05,35],[0.08,24],[0.12,11]]),eccCurve:curve([[0,100],[50,90],[100,38],[150,25]])});
+enrichOne("LS8-C502S",{speedXY:7120,weight:"19 kg",ct:.298,isNew:true,note:"官方新品；LS6-B 新一代機型，最大負載升級至 8 kg，手臂內置以太網口。"});
+enrichOne("LS8-C602S",{speedXY:7850,weight:"20 kg",ct:.314,isNew:true,note:"官方新品；LS6-B 新一代機型，最大負載升級至 8 kg，手臂內置以太網口。"});
+enrichOne("LS8-C702S",{speedXY:8590,weight:"21 kg",ct:.344,isNew:true,note:"官方新品；LS6-B 新一代機型，最大負載升級至 8 kg，手臂內置以太網口。"});
+enrich(/^LS10-B/,{source:"Epson 官方 LS10-B 系列頁：Z 軸 200 / 300 mm；LS10-B803S 技術規格：J3 300 mm、J4 慣量 0.02 / 0.3 kgm2",j4Rated:0.02,j4Max:0.3,eccRated:0,eccMax:200,j3Force:200,j3Speed:1100,j4Speed:1800,speedXY:10500,repeat:"J1-J2 ±0.020~0.025 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0.02,100],[0.05,70],[0.10,45],[0.30,15]]),eccCurve:curve([[0,100],[50,70],[100,45],[200,22]])});
+enrich(/^LS20-C|^LS20-CA/,{source:"ls-c_robot.pdf p.126-128,217",j4Rated:0.05,j4Max:1.00,eccRated:0,eccMax:200,j3Speed:2300,j4Speed:1400,repeat:"J1-J2 ±0.025 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0.01,160],[0.05,100],[0.15,28.6],[1.0,7.1]]),eccCurve:curve([[0,100],[50,70],[100,50],[200,25]])});
+enrichOne("LS20-C804S",{speedXY:9940,weight:"48 kg"});enrichOne("LS20-CA04S",{speedXY:11250,weight:"51 kg"});
+enrich(/^LS50-/,{source:"ls-c_robot.pdf p.173,175,221",j4Rated:1.0,j4Max:2.45,eccRated:0,eccMax:200,j3Speed:770,j4Speed:660,speedXY:6100,weight:"60~61 kg",repeat:"J1-J2 ±0.05 mm / J3 ±0.02 mm / J4 ±0.01 deg",inertiaCurve:curve([[0.2,645],[0.5,340],[1.0,100],[2.1,42],[2.45,38.5]]),eccCurve:curve([[0,100],[150,30],[200,15]])});
+
+enrich(/^LA3-/,{source:"la-a_robot.pdf p.21,44-47,71-72",j4Rated:0.005,j4Max:0.05,eccRated:0,eccMax:100,j3Force:100,j3Speed:1100,j4Speed:2600,speedXY:6000,weight:"12 kg",repeat:"J1-J2 ±0.01 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0.005,100],[0.01,60],[0.02,40],[0.05,20]]),eccCurve:curve([[0,100],[50,60],[75,40],[100,25]])});
+enrich(/^LA6-/,{source:"la-a_robot.pdf p.21,44-47,71-72",j4Rated:0.01,j4Max:0.12,eccRated:0,eccMax:150,j3Force:100,j3Speed:1100,j4Speed:2000,weight:"16~18 kg",repeat:"J1-J2 ±0.02 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0.01,100],[0.02,60],[0.08,30],[0.12,15]]),eccCurve:curve([[0,100],[50,70],[100,30],[150,20]])});
+enrichOne("LA6-A502S",{speedXY:6150});enrichOne("LA6-A602S",{speedXY:6800});enrichOne("LA6-A702S",{speedXY:7450});
+
+enrich(/^T3-/,{source:"t-b_robot.pdf p.84-85,167",j4Rated:0.003,j4Max:0.01,eccRated:0,eccMax:100,j3Force:83,j3Speed:1000,j4Speed:2600,speedXY:3700,weight:"14 kg",repeat:"J1-J2 ±0.02 mm / J3 ±0.02 mm / J4 ±0.02 deg",inertiaCurve:curve([[0,100],[0.003,100],[0.006,75],[0.01,30]]),eccCurve:curve([[0,100],[50,70],[100,25]])});
+enrich(/^T6-/,{source:"t-b_robot.pdf p.84-85,170",j4Rated:0.01,j4Max:0.08,eccRated:0,eccMax:150,j3Force:83,j3Speed:1000,j4Speed:1800,speedXY:4180,weight:"21 kg",repeat:"J1-J2 ±0.04 mm / J3 ±0.02 mm / J4 ±0.02 deg",inertiaCurve:curve([[0.01,100],[0.02,75],[0.04,60],[0.08,35]]),eccCurve:curve([[0,100],[50,70],[100,40],[150,20]])});
+
+enrich(/^RS3-/,{source:"rs_robot.pdf p.52-53,73-74",j4Rated:0.005,j4Max:0.05,eccRated:0,eccMax:100,j3Force:150,j3Speed:1100,j4Speed:2600,speedXY:6237,weight:"17 kg",repeat:"J1-J2 ±0.01 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0.005,100],[0.01,60],[0.02,40],[0.05,20]]),eccCurve:curve([[0,100],[25,80],[50,40],[100,20]])});
+enrich(/^RS4-/,{source:"rs_robot.pdf p.52-53,73-74",j4Rated:0.005,j4Max:0.05,eccRated:0,eccMax:100,j3Force:150,j3Speed:1100,j4Speed:2600,speedXY:7400,weight:"19 kg",repeat:"J1-J2 ±0.015 mm / J3 ±0.01 mm / J4 ±0.01 deg",inertiaCurve:curve([[0.005,100],[0.01,60],[0.02,40],[0.05,20]]),eccCurve:curve([[0,100],[25,70],[50,30],[100,20]])});
+
+enrich(/^C4-/,{source:"c_robot.pdf p.259; C4 4.3.2",j4Rated:0.01,j4Max:0.10,eccRated:50,eccMax:300,weight:"C4 27 kg / C4L 29 kg",repeat:"C4 ±0.02 mm / C4L ±0.03 mm",inertiaCurve:curve([[0.01,100],[0.05,50],[0.10,15]]),eccCurve:curve([[50,100],[100,50],[300,15]])});
+enrich(/^C8-/,{source:"c_robot.pdf p.137-145,261-263",j4Rated:0.03,j4Max:0.15,j4MomentMax:16.6,j5MomentMax:16.6,j6MomentMax:9.4,eccRated:50,eccMax:300,weight:"49~66 kg",repeat:"C8 ±0.02 mm / C8L ±0.03 mm / C8XL ±0.05 mm",inertiaCurve:curve([[0.03,100],[0.05,100],[0.10,50],[0.15,15]]),eccCurve:curve([[50,100],[100,50],[200,25],[300,15]])});
+enrich(/^CX4-/,{source:"Epson 官方型號頁 CX4-A601S 產品規格 / cx-a.pdf",j4Rated:null,j4Max:0.20,j5Max:0.20,j6Max:0.10,eccRated:30,eccMax:200,weight:"標準/潔淨 31 kg；防護 32 kg",power:"1.8 kVA",voltage:"AC200-240 V 單相",repeat:"J1-J6 ±0.01 mm",jointSpeeds:"J1 450 / J2 450 / J3 514 / J4 558 / J5 570 / J6 851 °/s",inertiaCurve:curve([[0.005,100],[0.02,70],[0.05,45],[0.10,25],[0.20,12]]),eccCurve:curve([[30,100],[100,50],[200,15]])});
+enrichOne("CX4-A601S",{isNew:true,note:"官方新品；最大負載 4 kg，法蘭向下姿態可達 5.0 kg。"});
+enrich(/^CX7-/,{source:"Epson 官方型號頁 CX7-A701S/CX-A 系列產品規格",j4Rated:null,j4Max:0.49,j5Max:0.49,j6Max:0.15,eccRated:50,eccMax:300,weight:"標準/潔淨 33 kg；防護 34 kg（A701S）",power:"2.0 kVA",voltage:"AC200-240 V 單相",repeat:"CX7 ±0.015 mm / CX7L ±0.02 mm",inertiaCurve:curve([[0.03,100],[0.10,70],[0.20,45],[0.49,15]]),eccCurve:curve([[50,100],[100,70],[200,35],[300,15]])});
+enrichOne("CX7-A701S",{isNew:true,jointSpeeds:"J1 414 / J2 389 / J3 487 / J4 558 / J5 547 / J6 851 °/s",note:"官方新品；7 kg 緊湊型 6 軸，含防護型與 NIW 無內部布線規格。"});
+enrichOne("CX7-A901S",{isNew:true,jointSpeeds:"J1 332 / J2 312 / J3 390 / J4 558 / J5 547 / J6 851 °/s",weight:"約 36 kg",note:"官方新品；CX7L 長臂 901 mm。CX7-A901S 官方頁抓取受站點防護阻擋，規格依 CX-A 系列手冊與同系列官方資料補齊。"});
+enrich(/^VT6-/,{source:"vt_robot.pdf p.85,88-89,187",j4Rated:0.01,j4Max:0.03,eccRated:50,eccMax:300,weight:"40~42 kg",repeat:"J1-J6 ±0.1 mm",speedXY:4563,inertiaCurve:curve([[0.01,100],[0.02,60],[0.03,30]]),eccCurve:curve([[50,100],[100,70],[200,35],[300,15]])});
+
+models.sort((a,b)=>a.model.localeCompare(b.model,undefined,{numeric:true}));
+
+const $=id=>document.getElementById(id);
+const fmt=v=>v===null||v===undefined||v===""?"待確認":v;
+const norm=s=>String(s||"").replace(/[\uFF01-\uFF5E]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\u3000/g," ").toUpperCase().replace(/[\s-]/g,"");
+const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null};
+const zVal=m=>num(m.z);
+const inertiaFrom=(mass,radius,known)=>known!==null?known:(mass!==null&&radius!==null?mass*Math.pow(radius/1000,2):null);
+const mm=m=>m===null?null:m/1000;
+function envOk(m,env){if(env==="any")return true;if(env==="ESD")return m.env==="ESD"||m.env==="潔淨";return m.env===env}
+function mountOk(m,mount){return mount==="any"||(m.mount||[]).includes(mount)}
+function inertiaOk(m,I){return I===null?true:(m.j4Max!==null&&m.j4Max>=I)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function interp(points,x){
+  if(!points||!points.length||x===null)return null;
+  const p=[...points].sort((a,b)=>a.x-b.x);
+  if(x<=p[0].x)return p[0].y;
+  for(let i=1;i<p.length;i++){
+    if(x<=p[i].x){
+      const a=p[i-1], b=p[i], t=(x-a.x)/(b.x-a.x || 1);
+      return a.y+(b.y-a.y)*t;
+    }
+  }
+  return p[p.length-1].y;
+}
+function calcInertia({mass,radius,known,shape,dimA,dimB,cgX,cgY}){
+  if(known!==null)return {I:known, method:"CAD 慣量"};
+  if(mass===null)return {I:null, method:"缺少重量"};
+  const dx=mm(cgX)||0, dy=mm(cgY)||0;
+  const offset=Math.hypot(dx,dy,mm(radius)||0);
+  const a=mm(dimA)||0, b=mm(dimB)||0;
+  let center=0, method="集中質量";
+  if(shape==="box" && a>0 && b>0){center=mass*(a*a+b*b)/12; method="長方體 + 平行軸";}
+  if(shape==="cylinder" && a>0){const r=a/2; center=mass*r*r/2; method="圓柱 + 平行軸";}
+  return {I:center+mass*offset*offset, method};
+}
+function calcCase(){
+  const mass=num($("aMass").value), radius=num($("aRadius").value), known=num($("aInertia").value);
+  const cgX=num($("cgX").value), cgY=num($("cgY").value), cgZ=num($("cgZ").value);
+  const shape=$("shape").value, dimA=num($("dimA").value), dimB=num($("dimB").value);
+  const targetCycle=num($("targetCycle").value), sf=num($("safetyFactor").value)||1, duty=num($("duty").value);
+  const inertia=calcInertia({mass,radius,known:shape==="known"?known:null,shape,dimA,dimB,cgX,cgY});
+  const ecc=Math.hypot(cgX||0,cgY||0,radius||0);
+  const moment=mass!==null?mass*9.80665*(mm(cgZ)!==null?Math.abs(mm(cgZ)):mm(ecc)||0):null;
+  return {mass,radius,known,cgX,cgY,cgZ,shape,dimA,dimB,targetCycle,sf,duty,I:inertia.I,method:inertia.method,ecc,moment};
+}
+
+function setTab(id){document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));$(id).classList.add("active");document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));window.scrollTo(0,0)}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+
+function card(m,score=null){
+  const id="d_"+norm(m.model);
+  const inertia=m.kind==="6axis"&&m.j5Max?`J4 ${m.j4Max} / J5 ${m.j5Max} / J6 ${m.j6Max} kg·m²`:(m.j4Max!==null?`${fmt(m.j4Rated)} / ${m.j4Max} kg·m²`:"待手冊確認");
+  const inertiaLabel=m.kind==="scara"?"J4 容許慣量":"腕部負載慣量";
+  return `<div class="card">
+    <div class="cardTop">
+      <div><h2 class="model">${esc(m.model)}</h2><div class="badges">${officialListModels.has(m.model)?'<span class="badge">官方列表</span>':""}${m.isNew?'<span class="badge">官方新品</span>':""}<span class="badge">${esc(m.series)} 系列</span><span class="badge">${esc(m.type)}</span><span class="badge">${esc(m.env)}</span><span class="badge">${(m.mount||[]).join(" / ")}</span></div></div>
+      ${score?`<div class="score">綜合評分<b>${score.total}</b><span>負載 ${score.load}，臂長 ${score.reach}，Z ${score.z}，慣量 ${score.inertia}</span></div>`:""}
+    </div>
+    <div class="metrics">
+      <div class="metric"><span>額定 / 最大負載</span><b>${m.ratedLoad} / ${m.maxLoad} kg</b></div>
+      <div class="metric"><span>可達距離</span><b>${m.reach} mm</b></div>
+      <div class="metric"><span>Z 行程</span><b>${fmt(m.z)}${m.z?" mm":""}</b></div>
+      <div class="metric"><span>${inertiaLabel}</span><b>${inertia}</b></div>
+      <div class="metric"><span>偏心率上限</span><b>${fmt(m.eccMax)}${m.eccMax?" mm":""}</b></div>
+    </div>
+    <div class="actions">
+      <a href="${esc(m.official)}" target="_blank" rel="noopener">${m.baseModel?`官方基準型號頁 (${esc(m.baseModel)})`:"官方型號頁"}</a>
+      ${m.manual?`<a href="${esc(m.manual)}" target="_blank" rel="noopener">系列產品手冊</a>`:""}
+      <button type="button" onclick="$('${id}').classList.toggle('open')">完整規格</button>
+      <button type="button" class="primary" onclick="selectForAdvice('${esc(m.model)}')">工程確認</button>
+    </div>
+    <div id="${id}" class="detail">${table(m)}<div class="notice">${m.baseModel?"此衍生環境規格連到官方基準 S 型號頁；官方頁資料下載區提供同系列手冊、3D STEP、DXF 或運動範圍圖。":"下載連結已改為官方型號頁；頁面資料下載區包含該型號對應的手冊、3D STEP、DXF 或運動範圍圖。"}所有文件仍請以官方頁面即時內容為準。</div></div>
+  </div>`;
+}
+function table(m){
+  const inertiaLabel=m.kind==="scara"?"J4 容許慣量":"腕部負載慣量";
+  const inertiaText=m.kind==="6axis"&&m.j5Max?`J4 ${m.j4Max} / J5 ${m.j5Max} / J6 ${m.j6Max} kg·m²`:(m.j4Max!==null?`${fmt(m.j4Rated)} / ${m.j4Max} kg·m²`:"未內建，需手冊確認");
+  const speedText=m.jointSpeeds|| (m.speedXY?`J1-J2/合成 ${m.speedXY} ${m.kind==="scara"?"mm/s":"mm/s"}；J3 ${fmt(m.j3Speed)}；J4 ${fmt(m.j4Speed)}`:"待確認");
+  const rows=[
+    ["型號",m.model],["系列",m.series],["型式",m.type],["環境",m.env],
+    ["額定負載 / 最大負載",`${m.ratedLoad} kg / ${m.maxLoad} kg`],
+    ["可達距離 / Z 行程",`${m.reach} mm / ${m.z?m.z+" mm":"不適用"}`],
+    [inertiaLabel,inertiaText],
+    ["偏心率 額定 / 最大",m.eccMax!==undefined?`${fmt(m.eccRated)} / ${m.eccMax} mm`:"待確認"],
+    ["最大速度",speedText],
+    ["重複精度",m.repeat],["本體重量",m.weight],["第3關節下壓力",m.j3Force?m.j3Force+" N":""],
+    ["電壓 / 功耗",m.voltage||m.power?`${fmt(m.voltage)} / ${fmt(m.power)}`:""],
+    ["6軸力矩限制",m.j4MomentMax?`J4 ${m.j4MomentMax} N·m / J5 ${m.j5MomentMax} N·m / J6 ${m.j6MomentMax} N·m`:""],
+    ["安裝方式",(m.mount||[]).join(" / ")],["控制器",m.controller],["循環時間",m.ct?m.ct+" s":"待確認"],
+    ["手冊來源",m.source],["備註",m.note]
+  ];
+  return `<table>${rows.filter(r=>r[1]).map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>`;
+}
+
+let acItems=[],acIdx=-1;
+$("selectedModel").innerHTML=models.map(m=>`<option value="${esc(m.model)}">${esc(m.model)}</option>`).join("");
+function refreshPreferredSeries(){
+  const kind=$("kind").value;
+  const items=[...new Set(models.filter(m=>kind==="any"||m.kind===kind).map(m=>m.series))].sort();
+  $("preferredSeries").innerHTML='<option value="">不指定</option>'+items.map(series=>`<option value="${esc(series)}">${esc(series)} 系列</option>`).join("");
+}
+function renderPurchased(){
+  $("purchasedOut").innerHTML=`<table class="priceTable"><thead><tr><th>照片型號</th><th>對應工具型號</th><th>前購未稅價</th><th></th></tr></thead><tbody>`+
+    purchasedModels.map(p=>`<tr><td><b>${esc(p.raw)}</b>${p.note?`<div class="hint">${esc(p.note)}</div>`:""}</td><td>${esc(p.model)}</td><td class="price">${p.price.toLocaleString()}</td><td><button class="miniBtn" onclick="selectPurchased('${esc(p.model)}')">查看</button></td></tr>`).join("")+
+    `</tbody></table>`;
+}
+function selectPurchased(model){
+  setTab("lookup");
+  const m=models.find(x=>x.model===model);
+  if(m) showLookup(m);
+}
+refreshPreferredSeries();
+renderPurchased();
+$("kind").addEventListener("change",refreshPreferredSeries);
+
+$("q").addEventListener("input",()=>{
+  const q=norm($("q").value), box=$("acList");
+  if(!q){box.hidden=true;$("lookupOut").className="empty";$("lookupOut").textContent="輸入型號後顯示規格、慣量與官方下載頁。";return}
+  acItems=models.filter(m=>norm(m.model).includes(q)).slice(0,40); acIdx=-1;
+  box.innerHTML=acItems.length?acItems.map((m,i)=>`<div class="acItem" data-i="${i}"><b>${esc(m.model)}</b><small>${esc(m.series)} 系列，${esc(m.type)}，最大 ${m.maxLoad} kg，可達 ${m.reach} mm</small></div>`).join(""):`<div class="acItem"><small>查無相符型號</small></div>`;
+  box.hidden=false;
+});
+$("acList").addEventListener("click",e=>{const item=e.target.closest(".acItem");if(!item||!acItems[item.dataset.i])return;showLookup(acItems[item.dataset.i])});
+$("q").addEventListener("keydown",e=>{if($("acList").hidden)return;if(e.key==="ArrowDown"){acIdx=Math.min(acIdx+1,acItems.length-1);e.preventDefault()}else if(e.key==="ArrowUp"){acIdx=Math.max(acIdx-1,0);e.preventDefault()}else if(e.key==="Enter"){const exact=acItems.find(m=>norm(m.model)===norm($("q").value));showLookup(exact||acItems[Math.max(acIdx,0)]);e.preventDefault();return}else{return}$("acList").querySelectorAll(".acItem").forEach((el,i)=>el.classList.toggle("sel",i===acIdx))});
+function showLookup(m){$("q").value=m.model;$("acList").hidden=true;$("lookupOut").className="";$("lookupOut").innerHTML=card(m)}
+
+$("runRecommend").addEventListener("click",()=>{
+  const kind=$("kind").value, env=$("env").value, mount=$("mount").value, load=num($("load").value), reach=num($("reach").value), zreq=num($("zreq").value), preferredSeries=$("preferredSeries").value, budgetMax=num($("budgetMax").value), purchasedMode=$("preferPurchased").value, officialListMode=$("officialListMode").value;
+  if(load===null||reach===null){$("recommendOut").className="empty";$("recommendOut").textContent="請至少輸入總重與作業半徑。";return}
+  const scored=models.filter(m=>kind==="any"||m.kind===kind)
+    .filter(m=>envOk(m,env)&&mountOk(m,mount))
+    .filter(m=>m.maxLoad>=load&&m.reach>=reach*.72&&m.reach<=reach*1.75)
+    .filter(m=>m.kind!=="scara"||zreq===null||zVal(m)===null||zVal(m)>=zreq)
+    .filter(m=>purchasedMode!=="only"||purchasedByModel.has(m.model))
+    .filter(m=>officialListMode!=="only"||officialListModels.has(m.model))
+    .filter(m=>budgetMax===null||!purchasedByModel.has(m.model)||purchasedByModel.get(m.model).price<=budgetMax)
+    .map(m=>scoreModel(m,{load,reach,zreq,env,preferredSeries,purchasedMode,budgetMax,officialListMode}))
+    .sort((a,b)=>b.total-a.total||(a.model.reach-b.model.reach)||a.model.maxLoad-b.model.maxLoad).slice(0,5);
+  if(!scored.length){$("recommendOut").className="empty";$("recommendOut").textContent="沒有符合硬條件的型號，請放寬負載、臂長、環境、安裝方式或預算。";return}
+  $("recommendOut").className="";
+  $("recommendOut").innerHTML=`<div class="resultHead"><span>推薦結果 Top ${scored.length}</span><span>基礎推薦；J4 慣量與重心請進工程確認</span></div>`+scored.map(s=>card(s.model,s)).join("");
+});
+function scoreModel(m,r){
+  let loadScore=100-Math.abs((r.load/(m.ratedLoad||m.maxLoad*.5))-.7)*80;
+  loadScore=Math.max(20,Math.min(100,loadScore));
+  let reachScore=Math.max(0,100-Math.abs(m.reach-r.reach)/r.reach*120);
+  let zScore=80;
+  if(m.kind==="scara"&&r.zreq!==null){const z=zVal(m)||0;zScore=z>=r.zreq?Math.max(45,100-(z-r.zreq)/Math.max(r.zreq,1)*45):0}
+  const p=purchasedByModel.get(m.model);
+  const purchasedScore=p?100:55;
+  const preferredBoost=r.preferredSeries===m.series?16:0;
+  const purchasedBoost=r.purchasedMode==="yes"&&p?10:0;
+  const officialBoost=r.officialListMode==="yes"&&officialListModels.has(m.model)?12:0;
+  const budgetBoost=p&&r.budgetMax!==null?Math.max(0,10-(p.price/r.budgetMax)*5):0;
+  let envPenalty=r.env==="any"&&m.env!=="標準"?10:0;
+  let total=Math.round(loadScore*.38+reachScore*.34+zScore*.16+purchasedScore*.12-envPenalty+preferredBoost+purchasedBoost+officialBoost+budgetBoost);
+  return {model:m,total,load:Math.round(loadScore),reach:Math.round(reachScore),z:Math.round(zScore),inertia:p?"已購型號":"工程確認"};
+}
+
+function selectForAdvice(model){$("selectedModel").value=model;$("aMass").value=$("load").value||"";setTab("advice");renderAdvice()}
+$("runAdvice").addEventListener("click",renderAdvice);$("selectedModel").addEventListener("change",renderAdvice);
+let pdfDepsPromise=null;
+function loadScriptOnce(src, test){
+  if(test()) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){
+      existing.addEventListener("load",()=>resolve(),{once:true});
+      existing.addEventListener("error",()=>reject(new Error(`載入失敗: ${src}`)),{once:true});
+      return;
+    }
+    const script=document.createElement("script");
+    script.src=src;
+    script.async=true;
+    script.onload=()=>resolve();
+    script.onerror=()=>reject(new Error(`載入失敗: ${src}`));
+    document.head.appendChild(script);
+  });
+}
+function loadPdfDeps(){
+  if(pdfDepsPromise) return pdfDepsPromise;
+  pdfDepsPromise=(async()=>{
+    await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",()=>typeof window.html2canvas==="function");
+    await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",()=>!!(window.jspdf&&window.jspdf.jsPDF));
+  })();
+  return pdfDepsPromise;
+}
+async function exportPdf(){
+  renderAdvice();
+  const btn=$("exportPdf");
+  const originalLabel=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="PDF 產生中...";
+  try{
+    await loadPdfDeps();
+    const report=$("reportBlock");
+    if(!report) throw new Error("找不到工程報告內容");
+    const canvas=await window.html2canvas(report,{
+      scale:2,
+      useCORS:true,
+      backgroundColor:"#ffffff"
+    });
+    const { jsPDF }=window.jspdf;
+    const pdf=new jsPDF("p","mm","a4");
+    const pageWidth=pdf.internal.pageSize.getWidth();
+    const pageHeight=pdf.internal.pageSize.getHeight();
+    const margin=10;
+    const usableWidth=pageWidth-margin*2;
+    const usableHeight=pageHeight-margin*2;
+    const imgWidth=usableWidth;
+    const imgHeight=canvas.height*imgWidth/canvas.width;
+    const ratio=canvas.width/imgWidth;
+    let renderedHeight=0;
+    let pageIndex=0;
+    while(renderedHeight<canvas.height){
+      const sliceHeight=Math.min(canvas.height-renderedHeight, Math.floor(usableHeight*ratio));
+      const pageCanvas=document.createElement("canvas");
+      pageCanvas.width=canvas.width;
+      pageCanvas.height=sliceHeight;
+      const ctx=pageCanvas.getContext("2d");
+      ctx.drawImage(canvas,0,renderedHeight,canvas.width,sliceHeight,0,0,canvas.width,sliceHeight);
+      const pageImg=pageCanvas.toDataURL("image/png");
+      if(pageIndex>0) pdf.addPage();
+      const pageImgHeight=sliceHeight*imgWidth/canvas.width;
+      pdf.addImage(pageImg,"PNG",margin,margin,imgWidth,pageImgHeight,undefined,"FAST");
+      renderedHeight+=sliceHeight;
+      pageIndex+=1;
+    }
+    const model=$("selectedModel").value||"epson-report";
+    pdf.save(`${model}-engineering-report.pdf`);
+  }catch(err){
+    console.error(err);
+    alert(`PDF 匯出失敗：${err.message}`);
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalLabel;
+  }
+}
+$("exportPdf").addEventListener("click",exportPdf);
+function renderAdvice(){
+  const m=models.find(x=>x.model===$("selectedModel").value)||models[0], c=calcCase(), mass=c.mass, I=c.I;
+  let html=card(m);
+  html+=`<div class="card"><div class="sectionTitle">工程判定</div>`;
+  const sf=c.sf||1;
+  const effMass=mass!==null?mass*sf:null, effI=I!==null?I*sf:null, effEcc=c.ecc*sf;
+  if(mass===null){html+=status("warn","負載資料不足","請輸入工件與治具總重。")}else if(effMass>m.maxLoad){html+=status("bad","超出最大負載",`含安全係數後 ${effMass.toFixed(2)} kg 大於 ${m.maxLoad} kg，不建議使用。`)}else{const ratio=effMass/m.maxLoad;html+=status(ratio>.85?"warn":"ok",ratio>.85?"負載偏緊":"負載可接受",`實際 ${mass} kg，安全係數 ${sf} 後 ${effMass.toFixed(2)} kg；佔最大負載 ${Math.round(ratio*100)}%，額定負載 ${m.ratedLoad} kg。`)}
+  if(I===null){html+=status("warn","慣量資料不足","請輸入等效半徑、重心或 CAD 慣量。")}else if(m.j4Max===null){html+=status("warn","型號慣量未內建",`需求慣量 ${I.toFixed(4)} kg·m²；此型號需回官方手冊確認。`)}else if(effI>m.j4Max){html+=status("bad","慣量超出容許",`估算 ${I.toFixed(4)} kg·m²，含安全係數 ${effI.toFixed(4)} kg·m²，大於上限 ${m.j4Max} kg·m²。`)}else{const ratio=effI/m.j4Max;html+=status(ratio>.7?"warn":"ok",ratio>.7?"慣量偏高":"慣量可接受",`估算方式：${c.method}；含安全係數後佔上限 ${Math.round(ratio*100)}%。`)}
+  if(m.eccMax===undefined){html+=status("warn","偏心率待確認","此型號尚未內建手冊偏心率限制。")}else if(effEcc>m.eccMax){html+=status("bad","重心偏心超出限制",`水平偏心 ${c.ecc.toFixed(1)} mm，含安全係數 ${effEcc.toFixed(1)} mm，大於上限 ${m.eccMax} mm。`)}else{const ratio=effEcc/m.eccMax;html+=status(ratio>.7?"warn":"ok",ratio>.7?"重心偏心偏高":"重心偏心可接受",`水平偏心 ${c.ecc.toFixed(1)} mm；手冊最大 ${m.eccMax} mm。`)}
+  if(m.j6MomentMax&&c.moment!==null){html+=status(c.moment>m.j6MomentMax?"bad":c.moment>m.j6MomentMax*.7?"warn":"ok","6軸腕部力矩",`依 Z 外伸估算 ${c.moment.toFixed(2)} N·m；J6 允許 ${m.j6MomentMax} N·m。`)}
+  const inertiaPct=effI!==null&&m.j4Max?effI/m.j4Max:0, loadPct=effMass!==null?effMass/m.maxLoad:0, eccPct=m.eccMax?effEcc/m.eccMax:0;
+  const curveSpeed=interp(m.inertiaCurve,effI), curveEcc=interp(m.eccCurve,effEcc);
+  const recommended=Math.max(10,Math.min(100,curveSpeed??100,curveEcc??100,(1-Math.max(loadPct-.75,0))*100));
+  const tight=Math.max(loadPct,inertiaPct,eccPct);
+  html+=status(tight>1?"bad":tight>.85?"warn":tight>.7?"warn":"ok",tight>1?"不可直接使用":tight>.85?"建議大幅降速":tight>.7?"建議保守加減速":"速度設定可從標準值開始",tight>1?"負載、慣量或偏心已超出限制。":`建議 Speed/Accel 起始值約 ${Math.round(recommended)}%。${c.targetCycle?`目標節拍 ${c.targetCycle}s，請以 Epson RC+ 實測確認。`:""}`);
+  html+=`<div class="report" id="reportBlock">${reportHTML(m,c,recommended)}</div>`;
+  html+=`<div class="notice">慣量公式：集中質量 I=m*r^2；長方體 I=m(a^2+b^2)/12 + m*r^2；圓柱 I=m*r^2/2 + m*L^2。6軸仍需依姿態確認 J4/J5/J6 力矩與 Epson RC+ 參數。本工具為初選與工程預審，不取代原廠手冊。</div></div>`;
+  $("adviceOut").innerHTML=html;
+}
+function status(cls,title,body){return `<div class="status ${cls}"><div><h4>${esc(title)}</h4><p>${esc(body)}</p></div></div>`}
+function reportHTML(m,c,recommended){
+  return `<h2>Garmin PDO Epson 選型工程報告</h2>
+  <div class="reportMeta">
+    <div><span>型號</span><b>${esc(m.model)}</b></div>
+    <div><span>負載</span><b>${c.mass??"未填"} kg</b></div>
+    <div><span>建議速度/加減速</span><b>${Math.round(recommended)}%</b></div>
+    <div><span>慣量</span><b>${c.I!==null?c.I.toFixed(4):"未填"} kg·m²</b></div>
+    <div><span>偏心率</span><b>${Number.isFinite(c.ecc)?c.ecc.toFixed(1):"未填"} mm</b></div>
+    <div><span>安全係數</span><b>${c.sf}</b></div>
+  </div>
+  <h3>規格摘要</h3>${table(m)}
+  <h3>輸入條件</h3>
+  <table><tr><td>重心 X/Y/Z</td><td>${fmt(c.cgX)} / ${fmt(c.cgY)} / ${fmt(c.cgZ)} mm</td></tr><tr><td>慣量估算</td><td>${esc(c.method)}；形狀 ${esc(c.shape)}；尺寸 ${fmt(c.dimA)} / ${fmt(c.dimB)} mm</td></tr><tr><td>節拍 / 稼動率</td><td>${fmt(c.targetCycle)} s / ${fmt(c.duty)}%</td></tr></table>
+  <h3>結論</h3>
+  <p>本報告依手冊內建限制與簡化公式進行初判。正式導入前需以 Epson RC+、實際治具 CAD 慣量、姿態範圍與現場節拍再驗證。</p>`;
+}
+renderAdvice();
+</script>
+</body>
+</html>
